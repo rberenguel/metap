@@ -42,6 +42,12 @@ class MetaP {
     this.metaPGlass = document.createElement("DIV");
     this.metaPGlass.id = "metap-glass";
     this.metaPGlass.style.display = "none";
+    this.metaPGlass.addEventListener("click", (ev) => {
+      if(ev.target.id != "metap-glass"){
+        return;
+      }
+      this.toggle()
+    })
   }
 
   _createMetaPModal() {
@@ -119,6 +125,7 @@ class MetaP {
         this.focusedElementBeforeOpen.focus();
         this.focusedElementBeforeOpen = null;
       }
+      this._removeInputs();
     } else {
       this.focusedElementBeforeOpen = document.activeElement;
       this.metaPModal.style.display = "block";
