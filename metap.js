@@ -43,11 +43,11 @@ class MetaP {
     this.metaPGlass.id = "metap-glass";
     this.metaPGlass.style.display = "none";
     this.metaPGlass.addEventListener("click", (ev) => {
-      if(ev.target.id != "metap-glass"){
+      if (ev.target.id != "metap-glass") {
         return;
       }
-      this.toggle()
-    })
+      this.toggle();
+    });
   }
 
   _createMetaPModal() {
@@ -163,7 +163,7 @@ class MetaP {
       div.dataset.index = index;
 
       div.addEventListener("click", () => {
-        if(this._usingForm){
+        if (this._usingForm) {
           this._usingForm.dispatchEvent(new Event("submit"));
         } else {
           this.searchText = div.textContent;
