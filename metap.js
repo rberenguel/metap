@@ -156,14 +156,18 @@ class MetaP {
       div.dataset.index = index;
 
       div.addEventListener("click", () => {
-        this.searchText = div.textContent;
-        this.updateDisplay();
-        this.handler(
-          new KeyboardEvent("keyup", {
-            key: "Enter",
-            code: "KeyEnter",
-          }),
-        );
+        if(this._usingForm){
+          this._usingForm.dispatchEvent(new Event("submit"));
+        } else {
+          this.searchText = div.textContent;
+          this.updateDisplay();
+          this.handler(
+            new KeyboardEvent("keyup", {
+              key: "Enter",
+              code: "KeyEnter",
+            }),
+          );
+        }
       });
 
       this.commandListContainer.appendChild(div);
@@ -184,6 +188,7 @@ class MetaP {
 
   _removeInputs() {
     this.formInputDisplay.innerHTML = "";
+    this._usingForm = null;
   }
 
   selectCommand(command, div) {
@@ -254,6 +259,7 @@ class MetaP {
         setTimeout(() => input.focus(), 0);
       }
     });
+    this._usingForm = form;
   }
 
   _handleInputKeyup(ev, form, command, div, index) {
