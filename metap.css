@@ -60,6 +60,12 @@
   background-color: rgba(50, 50, 50, 0.9);
 }
 
+.metap-modal-row.disabled {
+  cursor: no-drop;
+  color: #555;
+  font-style: italic;
+}
+
 .metap-modal-row-hovered {
   background-color: rgba(50, 50, 50, 0.9);
 }

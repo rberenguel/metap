@@ -161,21 +161,24 @@ class MetaP {
       div.command = d;
       div.aliases = d.aliases;
       div.dataset.index = index;
-
-      div.addEventListener("click", () => {
-        if (this._usingForm) {
-          this._usingForm.dispatchEvent(new Event("submit"));
-        } else {
-          this.searchText = div.textContent;
-          this.updateDisplay();
-          this.handler(
-            new KeyboardEvent("keyup", {
-              key: "Enter",
-              code: "KeyEnter",
-            }),
-          );
-        }
-      });
+      if (d.disabled) {
+        div.classList.add("disabled");
+      } else {
+        div.addEventListener("click", () => {
+          if (this._usingForm) {
+            this._usingForm.dispatchEvent(new Event("submit"));
+          } else {
+            this.searchText = div.title;
+            this.updateDisplay();
+            this.handler(
+              new KeyboardEvent("keyup", {
+                key: "Enter",
+                code: "KeyEnter",
+              }),
+            );
+          }
+        });
+      }
 
       this.commandListContainer.appendChild(div);
       this.commandRows.push({
