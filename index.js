@@ -192,3 +192,11 @@ const commands = [
 ];
 
 metaP.bind(commands, { sepia: 30 });
+
+const menuP = new MetaP({ id: "main-menu" });
+
+menuP.bind([commands[0], commands[1]], { blur: 30 }, false);
+
+document.getElementById("menu").addEventListener("click", () => {
+  menuP.metaP();
+});

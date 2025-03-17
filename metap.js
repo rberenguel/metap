@@ -14,6 +14,15 @@ class MetaP {
     this._hideInputDisplays();
   }
 
+  visible() {
+    return this.metaPGlass.style.display === "block";
+  }
+
+  ignoreKeys() {
+    console.info("Will ignore keys");
+    this.ignoresKeys = true;
+  }
+
   _initializeProperties(props) {
     // HTML Containers
     this.metaPGlass = null;
@@ -34,16 +43,20 @@ class MetaP {
     // Properties
     this.maxCommands = props.maxCommands ?? 3;
     this.maxCommandTitleLength = props.maxCommandTitleLength ?? 20;
+    this.id = props.id ?? "metap-modal";
+    this.ignoresKeys = false;
     // Other
     this.oldp = window.print;
   }
 
   _createMetaPGlass() {
     this.metaPGlass = document.createElement("DIV");
-    this.metaPGlass.id = "metap-glass";
+    this.metaPGlass.classList.add("metap-glass");
+    this.metaPGlass.classList.add("glass");
     this.metaPGlass.style.display = "none";
+    this.metaPGlass.id = this.id + "-glass";
     this.metaPGlass.addEventListener("click", (ev) => {
-      if (ev.target.id != "metap-glass") {
+      if (ev.target.id != this.id + "-glass") {
         return;
       }
       this.toggle();
@@ -52,7 +65,8 @@ class MetaP {
 
   _createMetaPModal() {
     this.metaPModal = document.createElement("DIV");
-    this.metaPModal.id = "metap-modal";
+    this.metaPModal.classList.add("metap-modal");
+    this.metaPModal.id = this.id;
     this.metaPGlass.appendChild(this.metaPModal);
   }
 
@@ -82,38 +96,43 @@ class MetaP {
     );
   }
 
-  bind(commands, filters = {}) {
-    window.print = null;
-    document.body.appendChild(this.metaPGlass);
+  _setupCommandsAndFilters(commands, filters = {}) {
     this.blur = filters.blur ?? 3;
     this.sepia = filters.sepia ?? 0;
     this.commands = commands;
-    const isMac =
-      /Mac|iPod|iPhone|iPad/.test(navigator.platform) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    document.addEventListener("keydown", (ev) => {
-      const cmd = isMac ? ev.metaKey : ev.ctrlKey;
-      if (ev.key === "p" && cmd) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        ev.stopImmediatePropagation();
-        this.metaP();
-        return;
-      }
-    });
-    document.addEventListener("keyup", (ev) => {
-      const cmd = isMac ? ev.metaKey : ev.ctrlKey;
-      if (ev.key === "p" && cmd) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        ev.stopImmediatePropagation();
-        this.metaP();
-        return;
-      }
-      this.handler(ev);
-    });
-
     this.generate();
+  }
+
+  bind(commands, filters = {}, metaPhandler = true) {
+    window.print = null;
+    document.body.appendChild(this.metaPGlass);
+    this._setupCommandsAndFilters(commands, filters);
+    if (metaPhandler) {
+      const isMac =
+        /Mac|iPod|iPhone|iPad/.test(navigator.platform) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      document.addEventListener("keydown", (ev) => {
+        const cmd = isMac ? ev.metaKey : ev.ctrlKey;
+        if (ev.key === "p" && cmd) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          ev.stopImmediatePropagation();
+          this.metaP();
+          return;
+        }
+      });
+      document.addEventListener("keyup", (ev) => {
+        const cmd = isMac ? ev.metaKey : ev.ctrlKey;
+        if (ev.key === "p" && cmd) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          ev.stopImmediatePropagation();
+          this.metaP();
+          return;
+        }
+      });
+    }
+    document.addEventListener("keyup", (ev) => this.handler(ev));
   }
 
   toggle() {
@@ -126,6 +145,8 @@ class MetaP {
         this.focusedElementBeforeOpen = null;
       }
       this._removeInputs();
+      console.log("Will accept keys");
+      this.ignoresKeys = false;
     } else {
       this.focusedElementBeforeOpen = document.activeElement;
       this.metaPModal.style.display = "block";
@@ -165,6 +186,7 @@ class MetaP {
         div.classList.add("disabled");
       } else {
         div.addEventListener("click", () => {
+          this.ignoresKeys = false;
           if (this._usingForm) {
             this._usingForm.dispatchEvent(new Event("submit"));
           } else {
@@ -237,7 +259,8 @@ class MetaP {
 
   _createInputForm(command) {
     const form = document.createElement("FORM");
-    form.id = "metap-input-form";
+    form.id = this.id + "-form";
+    form.classList.add("metap-input-form");
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       this.handleFormSubmit(form, command);
@@ -310,8 +333,9 @@ class MetaP {
   }
 
   _executeCommandWithoutInputs(command) {
-    command.lambda();
     this.toggle();
+    command.lambda();
+    // Lambda after toggle allows Lambda to control properties of metap
   }
 
   handleFormSubmit(form, command) {
@@ -444,10 +468,16 @@ class MetaP {
   }
 
   handler(ev) {
+    if (this.ignoresKeys) {
+      console.info("Command ignored");
+      return;
+    }
     if (!this._isMetaPModalOpen()) {
+      //console.debug(`Returning no open ${this.id}`)
       return;
     }
     if (this._isInputTyping(ev)) {
+      //console.debug(`Returning typing ${this.id}`)
       return;
     }
 
@@ -487,7 +517,11 @@ class MetaP {
   }
 
   _isInputTyping(ev) {
-    return ev.target?.nodeName === "INPUT" && ev.key !== "Escape";
+    return (
+      ev.target?.nodeName === "INPUT" &&
+      ev.key !== "Escape" &&
+      ev.target?.classList?.contains("metap-form-input")
+    );
   }
 
   _handleBackspace() {
@@ -588,11 +622,12 @@ class MetaP {
 const metaP = new MetaP();
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { metaP };
+  module.exports = { metaP, MetaP };
 } else if (typeof define === "function" && define.amd) {
   define(function () {
     return metaP;
   });
 } else {
   window.metaP = metaP;
+  window.MetaP = MetaP;
 }
