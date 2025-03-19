@@ -469,7 +469,7 @@ class MetaP {
 
   handler(ev) {
     if (this.ignoresKeys) {
-      console.info("Command ignored");
+      //console.info("Command ignored");
       return;
     }
     if (!this._isMetaPModalOpen()) {
