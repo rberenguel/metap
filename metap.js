@@ -19,7 +19,6 @@ class MetaP {
   }
 
   ignoreKeys() {
-    console.info("Will ignore keys");
     this.ignoresKeys = true;
   }
 
@@ -132,7 +131,11 @@ class MetaP {
         }
       });
     }
-    document.addEventListener("keyup", (ev) => this.handler(ev));
+    document.addEventListener("keyup", this.handler);
+  }
+
+  removeHandler() {
+    document.removeEventListener("keyup", this.handler);
   }
 
   toggle() {
@@ -145,8 +148,8 @@ class MetaP {
         this.focusedElementBeforeOpen = null;
       }
       this._removeInputs();
-      console.log("Will accept keys");
-      this.ignoresKeys = false;
+      //console.log("Will accept keys");
+      //this.ignoresKeys = false;
     } else {
       this.focusedElementBeforeOpen = document.activeElement;
       this.metaPModal.style.display = "block";
@@ -186,18 +189,14 @@ class MetaP {
         div.classList.add("disabled");
       } else {
         div.addEventListener("click", () => {
-          this.ignoresKeys = false;
+          //this.ignoresKeys = false;
           if (this._usingForm) {
             this._usingForm.dispatchEvent(new Event("submit"));
           } else {
+            console.log("Dispatching click");
             this.searchText = div.title;
             this.updateDisplay();
-            this.handler(
-              new KeyboardEvent("keyup", {
-                key: "Enter",
-                code: "KeyEnter",
-              }),
-            );
+            this._handleEnter();
           }
         });
       }
@@ -468,8 +467,9 @@ class MetaP {
   }
 
   handler(ev) {
+    console.log("Through handler", this.id);
     if (this.ignoresKeys) {
-      //console.info("Command ignored");
+      console.info("Command ignored", ev.key, ev);
       return;
     }
     if (!this._isMetaPModalOpen()) {
@@ -494,6 +494,7 @@ class MetaP {
         this.updateDisplay();
         break;
       case "Enter":
+        console.log("Handled in the event listener");
         this._handleEnter();
         break;
       case "ArrowDown":
@@ -510,6 +511,37 @@ class MetaP {
           this.updateDisplay();
         }
     }
+  }
+
+  dismiss() {
+    if (!this.visible()) {
+      return;
+    }
+    this._handleEscape();
+    this.updateDisplay();
+  }
+  accept() {
+    if (!this.visible()) {
+      return;
+    }
+    this.updateDisplay();
+    this._handleEnter();
+  }
+
+  goDown() {
+    if (!this.visible()) {
+      return;
+    }
+    this._handleArrowDown();
+    this.updateDisplay();
+  }
+
+  goUp() {
+    if (!this.visible()) {
+      return;
+    }
+    this._handleArrowUp();
+    this.updateDisplay();
   }
 
   _isMetaPModalOpen() {
@@ -542,11 +574,13 @@ class MetaP {
   }
 
   _handleEnter() {
+    console.log("Handling enter too");
     const visibleRows = this._getVisibleCommandRows();
     if (this._isValidSelection(visibleRows)) {
       const selectedRow = visibleRows[this._currentIndex];
       const commandIndex = parseInt(selectedRow.dataset.index);
       const command = this.commands[commandIndex];
+      console.log(command);
       this.selectCommand(command, selectedRow);
     } else {
       this.toggle();
@@ -572,6 +606,7 @@ class MetaP {
   }
 
   _handleArrowDown() {
+    console.log("Arrowing down");
     this._currentIndex++;
     let visibleRows = this._getVisibleCommandRows();
 
