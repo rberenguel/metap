@@ -111,6 +111,7 @@ class MetaP {
         /Mac|iPod|iPhone|iPad/.test(navigator.platform) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       document.addEventListener("keydown", (ev) => {
+        console.debug("keydown handler");
         const cmd = isMac ? ev.metaKey : ev.ctrlKey;
         if (ev.key === "p" && cmd) {
           ev.preventDefault();
@@ -121,6 +122,7 @@ class MetaP {
         }
       });
       document.addEventListener("keyup", (ev) => {
+        console.debug("keyup handler");
         const cmd = isMac ? ev.metaKey : ev.ctrlKey;
         if (ev.key === "p" && cmd) {
           ev.preventDefault();
@@ -131,11 +133,11 @@ class MetaP {
         }
       });
     }
-    document.addEventListener("keyup", this.handler);
+    document.addEventListener("keyup", this.handler(this));
   }
 
   removeHandler() {
-    document.removeEventListener("keyup", this.handler);
+    document.removeEventListener("keyup", this.handler(this));
   }
 
   toggle() {
@@ -466,51 +468,55 @@ class MetaP {
     }
   }
 
-  handler(ev) {
-    console.log("Through handler", this.id);
-    if (this.ignoresKeys) {
-      console.info("Command ignored", ev.key, ev);
-      return;
-    }
-    if (!this._isMetaPModalOpen()) {
-      //console.debug(`Returning no open ${this.id}`)
-      return;
-    }
-    if (this._isInputTyping(ev)) {
-      //console.debug(`Returning typing ${this.id}`)
-      return;
-    }
+  handler(dis) {
+    return function (ev) {
+      if (dis === undefined) {
+        console.log("who dis?");
+        return;
+      }
+      console.log("Through handler", dis.id);
+      if (dis.ignoresKeys) {
+        console.info("Command ignored", ev.key, ev);
+        return;
+      }
+      if (!dis._isMetaPModalOpen()) {
+        return;
+      }
+      if (dis._isInputTyping(ev)) {
+        return;
+      }
 
-    ev.preventDefault();
-    ev.stopPropagation();
+      ev.preventDefault();
+      ev.stopPropagation();
 
-    switch (ev.key) {
-      case "Backspace":
-        this._handleBackspace();
-        this.updateDisplay();
-        break;
-      case "Escape":
-        this._handleEscape();
-        this.updateDisplay();
-        break;
-      case "Enter":
-        console.log("Handled in the event listener");
-        this._handleEnter();
-        break;
-      case "ArrowDown":
-        this._handleArrowDown();
-        this.updateDisplay();
-        break;
-      case "ArrowUp":
-        this._handleArrowUp();
-        this.updateDisplay();
-        break;
-      default:
-        if (ev.key.length === 1) {
-          this._handleSingleCharInput(ev.key);
-          this.updateDisplay();
-        }
-    }
+      switch (ev.key) {
+        case "Backspace":
+          dis._handleBackspace();
+          dis.updateDisplay();
+          break;
+        case "Escape":
+          dis._handleEscape();
+          dis.updateDisplay();
+          break;
+        case "Enter":
+          console.log("Handled in the event listener");
+          dis._handleEnter();
+          break;
+        case "ArrowDown":
+          dis._handleArrowDown();
+          dis.updateDisplay();
+          break;
+        case "ArrowUp":
+          dis._handleArrowUp();
+          dis.updateDisplay();
+          break;
+        default:
+          if (ev.key.length === 1) {
+            dis._handleSingleCharInput(ev.key);
+            dis.updateDisplay();
+          }
+      }
+    };
   }
 
   dismiss() {
@@ -650,7 +656,7 @@ class MetaP {
 
     const event = new KeyboardEvent("keyup", { key: key });
 
-    this.handler(event);
+    this.handler(this)(event);
   }
 }
 
