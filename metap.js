@@ -128,7 +128,6 @@ class MetaP {
           ev.preventDefault();
           ev.stopPropagation();
           ev.stopImmediatePropagation();
-          this.metaP();
           return;
         }
       });
